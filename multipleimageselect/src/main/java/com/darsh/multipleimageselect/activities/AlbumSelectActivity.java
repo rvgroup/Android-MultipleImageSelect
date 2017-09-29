@@ -2,6 +2,7 @@ package com.darsh.multipleimageselect.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -48,6 +49,8 @@ public class AlbumSelectActivity extends HelperActivity {
     private ContentObserver observer;
     private Handler handler;
     private Thread thread;
+
+    private boolean customPathProcessed;
 
     private final String[] projection = new String[]{
             MediaStore.Images.Media.BUCKET_ID,
@@ -123,6 +126,18 @@ public class AlbumSelectActivity extends HelperActivity {
 
                         } else {
                             adapter.notifyDataSetChanged();
+                        }
+
+                        String customPath = getIntent().getStringExtra("customPath");
+
+                        if (!customPathProcessed && customPath != null && albums != null && !albums.isEmpty()) {
+                            String album = albums.get(0).name;
+
+                            Intent albumIntent = new Intent(getApplicationContext(), ImageSelectActivity.class);
+                            albumIntent.putExtra(Constants.INTENT_EXTRA_ALBUM, album);
+                            startActivityForResult(albumIntent, Constants.REQUEST_CODE);
+
+                            customPathProcessed = true;
                         }
                         break;
                     }
@@ -243,9 +258,25 @@ public class AlbumSelectActivity extends HelperActivity {
                 sendMessage(Constants.FETCH_STARTED);
             }
 
-            Cursor cursor = getApplicationContext().getContentResolver()
-                    .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
-                            null, null, MediaStore.Images.Media.DATE_ADDED);
+            String customPath = getIntent().getStringExtra("customPath");
+            Cursor cursor;
+
+            if (customPath != null) {
+                cursor = getApplicationContext().getContentResolver()
+                        .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                projection,
+                                MediaStore.Images.Media.DATA + " like ? ",
+                                new String[] {"%/" + customPath + "/%"},
+                                MediaStore.Images.Media.DATE_ADDED);
+            } else {
+                cursor = getApplicationContext().getContentResolver()
+                        .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                projection,
+                                null,
+                                null,
+                                MediaStore.Images.Media.DATE_ADDED);
+            }
+
             if (cursor == null) {
                 sendMessage(Constants.ERROR);
                 return;

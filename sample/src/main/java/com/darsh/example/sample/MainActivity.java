@@ -24,6 +24,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     final String DIR_SD = "MultiImageSelector-b8b16f7cf85d";
     final String FILENAME_SD = "2f522aac-152c-4731-95d8-b8b16f7cf85d.sv";
+    final String FILE_WITH_CUSTOM_PATH = "custompath.txt";
 
     private boolean inClose;
 
@@ -38,6 +39,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (!this.inClose) {
             Intent intent = new Intent(MainActivity.this, AlbumSelectActivity.class);
+
+            File file = this.GetFile(FILE_WITH_CUSTOM_PATH);
+            if (file.exists()) {
+                intent.putExtra("customPath", DIR_SD);
+            }
+
             startActivityForResult(intent, Constants.REQUEST_CODE);
         }
 
@@ -140,18 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void saveTextToFile(String text) throws  Exception {
         if (this.isExternalStorageWritable()) {
-            // получаем путь к SD
-            File sdPath = Environment.getExternalStorageDirectory();
-
-            // добавляем свой каталог к пути
-            sdPath = new File(sdPath.getAbsolutePath() + "/" + DIR_SD);
-
-            // создаем каталог
-            sdPath.mkdirs();
-
-            // формируем объект File, который содержит путь к файлу
-            File sdFile = new File(sdPath, FILENAME_SD);
-
+            File sdFile = this.GetFile(FILENAME_SD);
             sdFile.delete();
 
             try {
@@ -164,5 +160,21 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    private File GetFile(String localPath) {
+        // получаем путь к SD
+        File sdPath = Environment.getExternalStorageDirectory();
+
+        // добавляем свой каталог к пути
+        sdPath = new File(sdPath.getAbsolutePath() + "/" + DIR_SD);
+
+        // создаем каталог
+        sdPath.mkdirs();
+
+        // формируем объект File, который содержит путь к файлу
+        File sdFile = new File(sdPath, localPath);
+
+        return  sdFile;
     }
 }
