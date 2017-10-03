@@ -41,8 +41,9 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, AlbumSelectActivity.class);
 
             File file = this.GetFile(FILE_WITH_CUSTOM_PATH);
+
             if (file.exists()) {
-                intent.putExtra("customPath", DIR_SD);
+                intent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, DIR_SD);
             }
 
             startActivityForResult(intent, Constants.REQUEST_CODE);

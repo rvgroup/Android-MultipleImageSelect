@@ -25,6 +25,9 @@ public class Constants {
     public static final String INTENT_EXTRA_LIMIT = "limit";
     public static final int DEFAULT_LIMIT = 10;
 
+    public static final String INTENT_EXTRA_DELETE_MODE = "deletemode";
+    public static final String INTENT_EXTRA_CUSTOM_PATH = "custompath";
+
     //Maximum number of images that can be selected at a time
     public static int limit;
 }

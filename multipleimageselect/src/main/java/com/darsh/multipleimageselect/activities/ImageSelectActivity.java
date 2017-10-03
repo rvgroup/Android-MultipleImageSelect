@@ -40,6 +40,7 @@ import java.util.HashSet;
 public class ImageSelectActivity extends HelperActivity {
     private ArrayList<Image> images;
     private String album;
+    private Boolean deleteMode;
 
     private TextView errorDisplay;
 
@@ -81,6 +82,8 @@ public class ImageSelectActivity extends HelperActivity {
             finish();
         }
         album = intent.getStringExtra(Constants.INTENT_EXTRA_ALBUM);
+
+        deleteMode = intent.getBooleanExtra(Constants.INTENT_EXTRA_DELETE_MODE, false);
 
         errorDisplay = (TextView) findViewById(R.id.text_view_error);
         errorDisplay.setVisibility(View.INVISIBLE);
@@ -130,7 +133,7 @@ public class ImageSelectActivity extends HelperActivity {
                         due to the activity being restarted or content being changed.
                          */
                         if (adapter == null) {
-                            adapter = new CustomImageSelectAdapter(getApplicationContext(), images);
+                            adapter = new CustomImageSelectAdapter(getApplicationContext(), images, deleteMode);
                             gridView.setAdapter(adapter);
 
                             progressBar.setVisibility(View.INVISIBLE);
@@ -225,6 +228,11 @@ public class ImageSelectActivity extends HelperActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home: {
+                if (deleteMode) {
+                    sendIntent(true);
+                    return true;
+                }
+
                 onBackPressed();
                 return true;
             }
@@ -239,7 +247,12 @@ public class ImageSelectActivity extends HelperActivity {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             MenuInflater menuInflater = mode.getMenuInflater();
-            menuInflater.inflate(R.menu.menu_contextual_action_bar, menu);
+
+            if (deleteMode) {
+                menuInflater.inflate(R.menu.menu_contextual_action_delete_bar, menu);
+            } else {
+                menuInflater.inflate(R.menu.menu_contextual_action_bar, menu);
+            }
 
             actionMode = mode;
             countSelected = 0;
@@ -254,8 +267,8 @@ public class ImageSelectActivity extends HelperActivity {
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {int i = item.getItemId();
-            if (i == R.id.menu_item_add_image) {
-                sendIntent();
+            if (i == R.id.menu_item_add_image || i == R.id.menu_item_delete_image) {
+                sendIntent(false);
                 return true;
             }
             return false;
@@ -263,6 +276,11 @@ public class ImageSelectActivity extends HelperActivity {
 
         @Override
         public void onDestroyActionMode(ActionMode mode) {
+            if (deleteMode) {
+                sendIntent(true);
+                return;
+            }
+
             if (countSelected > 0) {
                 deselectAll();
             }
@@ -307,10 +325,17 @@ public class ImageSelectActivity extends HelperActivity {
         return selectedImages;
     }
 
-    private void sendIntent() {
+    private void sendIntent(boolean sendNull) {
         Intent intent = new Intent();
-        intent.putParcelableArrayListExtra(Constants.INTENT_EXTRA_IMAGES, getSelected());
-        setResult(RESULT_OK, intent);
+
+        if (sendNull) {
+            intent.putParcelableArrayListExtra(Constants.INTENT_EXTRA_IMAGES, null);
+            setResult(RESULT_OK, intent);
+        } else {
+            intent.putParcelableArrayListExtra(Constants.INTENT_EXTRA_IMAGES, getSelected());
+            setResult(RESULT_OK, intent);
+        }
+
         finish();
     }
 
@@ -345,7 +370,7 @@ public class ImageSelectActivity extends HelperActivity {
             }
 
             Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
-                    MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " =?", new String[]{ album }, MediaStore.Images.Media.DATE_ADDED);
+                    MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " =?", new String[]{ album }, MediaStore.Images.Media.DATE_ADDED + " DESC");
             if (cursor == null) {
                 sendMessage(Constants.ERROR);
                 return;

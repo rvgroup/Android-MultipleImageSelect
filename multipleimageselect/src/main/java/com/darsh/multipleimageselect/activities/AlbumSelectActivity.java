@@ -37,6 +37,7 @@ import java.util.HashSet;
  */
 public class AlbumSelectActivity extends HelperActivity {
     private ArrayList<Album> albums;
+    private Boolean deleteMode;
 
     private TextView errorDisplay;
 
@@ -91,6 +92,7 @@ public class AlbumSelectActivity extends HelperActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(getApplicationContext(), ImageSelectActivity.class);
                 intent.putExtra(Constants.INTENT_EXTRA_ALBUM, albums.get(position).name);
+                intent.putExtra(Constants.INTENT_EXTRA_DELETE_MODE, deleteMode);
                 startActivityForResult(intent, Constants.REQUEST_CODE);
             }
         });
@@ -128,13 +130,15 @@ public class AlbumSelectActivity extends HelperActivity {
                             adapter.notifyDataSetChanged();
                         }
 
-                        String customPath = getIntent().getStringExtra("customPath");
+                        String customPath = getIntent().getStringExtra(Constants.INTENT_EXTRA_CUSTOM_PATH);
 
                         if (!customPathProcessed && customPath != null && albums != null && !albums.isEmpty()) {
                             String album = albums.get(0).name;
 
                             Intent albumIntent = new Intent(getApplicationContext(), ImageSelectActivity.class);
                             albumIntent.putExtra(Constants.INTENT_EXTRA_ALBUM, album);
+                            deleteMode = true;
+                            albumIntent.putExtra(Constants.INTENT_EXTRA_DELETE_MODE, deleteMode);
                             startActivityForResult(albumIntent, Constants.REQUEST_CODE);
 
                             customPathProcessed = true;
@@ -258,7 +262,7 @@ public class AlbumSelectActivity extends HelperActivity {
                 sendMessage(Constants.FETCH_STARTED);
             }
 
-            String customPath = getIntent().getStringExtra("customPath");
+            String customPath = getIntent().getStringExtra(Constants.INTENT_EXTRA_CUSTOM_PATH);
             Cursor cursor;
 
             if (customPath != null) {

@@ -16,8 +16,12 @@ import java.util.ArrayList;
  * Created by Darshan on 4/18/2015.
  */
 public class CustomImageSelectAdapter extends CustomGenericAdapter<Image> {
-    public CustomImageSelectAdapter(Context context, ArrayList<Image> images) {
+    private Boolean deleteMode = false;
+
+    public CustomImageSelectAdapter(Context context, ArrayList<Image> images, Boolean deleteMode) {
         super(context, images);
+
+        this.deleteMode = deleteMode;
     }
 
     @Override
@@ -45,7 +49,12 @@ public class CustomImageSelectAdapter extends CustomGenericAdapter<Image> {
 
         if (arrayList.get(position).isSelected) {
             viewHolder.view.setAlpha(0.5f);
-            ((FrameLayout) convertView).setForeground(context.getResources().getDrawable(R.drawable.ic_done_white));
+
+            if (deleteMode) {
+                ((FrameLayout) convertView).setForeground(context.getResources().getDrawable(R.drawable.ic_remove));
+            } else {
+                ((FrameLayout) convertView).setForeground(context.getResources().getDrawable(R.drawable.ic_done_green));
+            }
 
         } else {
             viewHolder.view.setAlpha(0.0f);
