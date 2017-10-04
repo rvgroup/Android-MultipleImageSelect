@@ -228,6 +228,10 @@ public class ImageSelectActivity extends HelperActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home: {
+                sendIntent(true);
+                return true;
+
+                /*
                 if (deleteMode) {
                     sendIntent(true);
                     return true;
@@ -235,6 +239,7 @@ public class ImageSelectActivity extends HelperActivity {
 
                 onBackPressed();
                 return true;
+                */
             }
 
             default: {
@@ -276,6 +281,10 @@ public class ImageSelectActivity extends HelperActivity {
 
         @Override
         public void onDestroyActionMode(ActionMode mode) {
+            sendIntent(true);
+            return;
+
+            /*
             if (deleteMode) {
                 sendIntent(true);
                 return;
@@ -285,6 +294,7 @@ public class ImageSelectActivity extends HelperActivity {
                 deselectAll();
             }
             actionMode = null;
+                        */
         }
     };
 
