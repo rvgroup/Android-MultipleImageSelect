@@ -43,7 +43,17 @@ public class MainActivity extends AppCompatActivity {
             File file = this.GetFile(FILE_WITH_CUSTOM_PATH);
 
             if (file.exists()) {
-                intent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, DIR_SD);
+                //!!!
+                File sdPath = Environment.getExternalStorageDirectory();
+
+                // добавляем свой каталог к пути
+                sdPath = new File(sdPath.getAbsolutePath() + "/" + DIR_SD);
+
+                //intent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, DIR_SD);
+
+                String customPath = sdPath.getAbsolutePath();
+
+                intent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, customPath);
             }
 
             startActivityForResult(intent, Constants.REQUEST_CODE);

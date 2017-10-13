@@ -37,7 +37,7 @@ import java.util.HashSet;
  */
 public class AlbumSelectActivity extends HelperActivity {
     private ArrayList<Album> albums;
-    private Boolean deleteMode;
+    private String customPath;
 
     private TextView errorDisplay;
 
@@ -92,7 +92,7 @@ public class AlbumSelectActivity extends HelperActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(getApplicationContext(), ImageSelectActivity.class);
                 intent.putExtra(Constants.INTENT_EXTRA_ALBUM, albums.get(position).name);
-                intent.putExtra(Constants.INTENT_EXTRA_DELETE_MODE, deleteMode);
+                intent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, customPath);
                 startActivityForResult(intent, Constants.REQUEST_CODE);
             }
         });
@@ -107,7 +107,26 @@ public class AlbumSelectActivity extends HelperActivity {
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case Constants.PERMISSION_GRANTED: {
+                        customPath = getIntent().getStringExtra(Constants.INTENT_EXTRA_CUSTOM_PATH);
+
+                        if (customPath != null) {
+                            //String album = albums.get(0).name;
+
+                            Intent albumIntent = new Intent(getApplicationContext(), ImageSelectActivity.class);
+                            //albumIntent.putExtra(Constants.INTENT_EXTRA_ALBUM, album);
+
+                            albumIntent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, customPath);
+                            startActivityForResult(albumIntent, Constants.REQUEST_CODE);
+
+                            customPathProcessed = true;
+
+                            return;
+                        }
+
                         loadAlbums();
+
+
+
                         break;
                     }
 
@@ -130,19 +149,21 @@ public class AlbumSelectActivity extends HelperActivity {
                             adapter.notifyDataSetChanged();
                         }
 
-                        String customPath = getIntent().getStringExtra(Constants.INTENT_EXTRA_CUSTOM_PATH);
+                        /*
+                        customPath = getIntent().getStringExtra(Constants.INTENT_EXTRA_CUSTOM_PATH);
 
                         if (!customPathProcessed && customPath != null && albums != null && !albums.isEmpty()) {
                             String album = albums.get(0).name;
 
                             Intent albumIntent = new Intent(getApplicationContext(), ImageSelectActivity.class);
                             albumIntent.putExtra(Constants.INTENT_EXTRA_ALBUM, album);
-                            deleteMode = true;
-                            albumIntent.putExtra(Constants.INTENT_EXTRA_DELETE_MODE, deleteMode);
+
+                            albumIntent.putExtra(Constants.INTENT_EXTRA_CUSTOM_PATH, customPath);
                             startActivityForResult(albumIntent, Constants.REQUEST_CODE);
 
                             customPathProcessed = true;
                         }
+                        */
                         break;
                     }
 

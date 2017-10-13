@@ -40,7 +40,7 @@ import java.util.HashSet;
 public class ImageSelectActivity extends HelperActivity {
     private ArrayList<Image> images;
     private String album;
-    private Boolean deleteMode;
+    private String customPath;
 
     private TextView errorDisplay;
 
@@ -58,6 +58,16 @@ public class ImageSelectActivity extends HelperActivity {
     private Thread thread;
 
     private final String[] projection = new String[]{ MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA };
+
+    @Override
+    public void onBackPressed() {
+        if (customPath != null) {
+            sendIntent(true);
+            return;
+        }
+
+        super.onBackPressed();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +93,7 @@ public class ImageSelectActivity extends HelperActivity {
         }
         album = intent.getStringExtra(Constants.INTENT_EXTRA_ALBUM);
 
-        deleteMode = intent.getBooleanExtra(Constants.INTENT_EXTRA_DELETE_MODE, false);
+        customPath = intent.getStringExtra(Constants.INTENT_EXTRA_CUSTOM_PATH);
 
         errorDisplay = (TextView) findViewById(R.id.text_view_error);
         errorDisplay.setVisibility(View.INVISIBLE);
@@ -97,10 +107,11 @@ public class ImageSelectActivity extends HelperActivity {
                     actionMode = ImageSelectActivity.this.startActionMode(callback);
                 }
                 toggleSelection(position);
-                actionMode.setTitle(countSelected + " " + getString(R.string.selected));
 
                 if (countSelected == 0) {
-                    actionMode.finish();
+                    actionMode.setTitle(getString(R.string.select_images));
+                } else {
+                    actionMode.setTitle(countSelected + " " + getString(R.string.selected));
                 }
             }
         });
@@ -133,7 +144,7 @@ public class ImageSelectActivity extends HelperActivity {
                         due to the activity being restarted or content being changed.
                          */
                         if (adapter == null) {
-                            adapter = new CustomImageSelectAdapter(getApplicationContext(), images, deleteMode);
+                            adapter = new CustomImageSelectAdapter(getApplicationContext(), images, customPath);
                             gridView.setAdapter(adapter);
 
                             progressBar.setVisibility(View.INVISIBLE);
@@ -253,7 +264,7 @@ public class ImageSelectActivity extends HelperActivity {
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             MenuInflater menuInflater = mode.getMenuInflater();
 
-            if (deleteMode) {
+            if (customPath != null) {
                 menuInflater.inflate(R.menu.menu_contextual_action_delete_bar, menu);
             } else {
                 menuInflater.inflate(R.menu.menu_contextual_action_bar, menu);
@@ -379,6 +390,50 @@ public class ImageSelectActivity extends HelperActivity {
                 }
             }
 
+            int tempCountSelected = 0;
+            ArrayList<Image> temp;
+
+            if (customPath != null) {
+                File directory = new File(customPath);
+                File[] files = directory.listFiles();
+
+                int cnt = files.length > 0 ? files.length - 1 : 0;
+                temp = new ArrayList<>();
+
+                for (int i = 0; i < files.length; i++)
+                {
+                    File f = files[i];
+                    long id = f.hashCode();
+
+                    //long id = cursor.getLong(cursor.getColumnIndex(projection[0]));
+                    String name = f.getName();
+
+                    if (name.endsWith(".sv") || name.endsWith(".txt")) {
+                        continue;
+                    }
+
+                    String path = f.getAbsolutePath();
+
+                    boolean isSelected = selectedImages.contains(id);
+
+                    if (isSelected) {
+                        tempCountSelected++;
+                    }
+
+                    temp.add(new Image(id, name, path, isSelected));
+                }
+
+                if (images == null) {
+                    images = new ArrayList<>();
+                }
+                images.clear();
+                images.addAll(temp);
+
+                sendMessage(Constants.FETCH_COMPLETED, tempCountSelected);
+
+                return;
+            }
+
             Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
                     MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " =?", new String[]{ album }, MediaStore.Images.Media.DATE_ADDED + " DESC");
             if (cursor == null) {
@@ -392,8 +447,7 @@ public class ImageSelectActivity extends HelperActivity {
             tempCountSelected keeps track of number of selected images. On handling
             FETCH_COMPLETED message, countSelected is assigned value of tempCountSelected.
              */
-            int tempCountSelected = 0;
-            ArrayList<Image> temp = new ArrayList<>(cursor.getCount());
+            temp = new ArrayList<>(cursor.getCount());
             if (cursor.moveToLast()) {
                 do {
                     if (Thread.interrupted()) {
